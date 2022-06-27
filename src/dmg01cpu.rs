@@ -1138,9 +1138,7 @@ impl Dmg01Cpu {
 
     /// halt
     fn halt(&mut self) {
-        if self.get_ime() {
-            self.set_halt(true);
-        }
+        self.set_halt(true);
     }
 
     /// stop
@@ -1434,7 +1432,7 @@ impl Dmg01Cpu {
         self.call(isr);
     }
 
-    fn check_irqs(&mut self) {
+    fn update_irqs(&mut self) {
         for i in 0..5 {
             let iflag = self.interrupt_flag & (0x01 << i) > 0;
             let ienable = self.interrupt_enable & (0x01 << i) > 0;
@@ -1463,10 +1461,14 @@ impl Dmg01Cpu {
 
         if self.get_ime() {
             self.cycle = 0;
-            self.check_irqs();
+            self.update_irqs();
             self.update_device();
 
             total_cycle += self.cycle;
+        } else {
+            if self.interrupt_flag & self.interrupt_enable & 0x1f > 0 {
+                self.set_halt(false);
+            }
         }
 
         total_cycle
