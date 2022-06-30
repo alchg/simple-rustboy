@@ -1459,15 +1459,16 @@ impl Dmg01Cpu {
 
         self.update_device();
 
-        if self.get_ime() {
-            self.cycle = 0;
-            self.update_irqs();
-            self.update_device();
+        if self.interrupt_flag & self.interrupt_enable & 0x1f > 0 {
+            self.set_halt(false);
+            if self.get_ime() {
+                self.cycle = 0;
+                self.update_irqs();
+                self.update_device();
 
-            total_cycle += self.cycle;
-        } else {
-            if self.interrupt_flag & self.interrupt_enable & 0x1f > 0 {
-                self.set_halt(false);
+                total_cycle += self.cycle;
+            } else {
+                // halt bug
             }
         }
 
