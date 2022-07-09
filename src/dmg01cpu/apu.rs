@@ -1,14 +1,16 @@
 mod channel;
+mod wave;
 
 use super::super::Common;
 use super::Log;
 use channel::Channel;
+use wave::Wave;
 
 pub struct APU {
     log_mode: u8,
     channel1: Channel,
     channel2: Channel,
-    //channel3: Channel,
+    channel3: Wave,
     //channel4: Channel,
     lvol: f64,
     rvol: f64,
@@ -21,7 +23,7 @@ impl APU {
             log_mode: log_mode,
             channel1: Channel::new(),
             channel2: Channel::new(),
-            //channel3: Channel::new(),
+            channel3: Wave::new(),
             //channel4: Channel::new(),
             lvol: 0.0,
             rvol: 0.0,
@@ -37,7 +39,8 @@ impl APU {
         let vol: f64 = (self.lvol + self.rvol) / 2.0;
 
         for _ in 0..max + modify {
-            let value = (self.channel1.sample() + self.channel2.sample()) / 2;
+            let value =
+                (self.channel1.sample() + self.channel2.sample() + self.channel3.sample()) / 3;
 
             result.push(((value as f64) * vol) as i16);
         }
@@ -93,6 +96,19 @@ impl APU {
         self.channel2.envelope_samples =
             (envelope_sweep as i32) * (Common::SAMPLE_RATE as i32) / 64;
         self.channel2.envelope_increasing = envelope_dir == 1;
+    }
+
+    fn start_channel3(&mut self) {
+        let selection = (self.ram[0x1e] & 0x40) >> 6; // 1:stop when nr31 expire
+        let length = self.ram[0x1b];
+
+        let mut duration = -1;
+        if selection == 1 {
+            duration =
+                (((256.0 - length as f32) * (1.0 / 256.0)) as i32) * Common::SAMPLE_RATE as i32;
+        }
+
+        self.channel3.reset(duration);
     }
 
     fn masked_read(&self, address: u16, value: u8) -> u8 {
@@ -182,6 +198,43 @@ impl APU {
                 self.channel2.limit = self.get_squarelimit(wave_pattern);
             }
 
+            0xff1a => {
+                // NR30
+                if self.ram[ram_address] & 0x80 == 0x80 {
+                    self.channel3.is_playback = true;
+                } else {
+                    self.channel3.is_playback = false;
+                }
+            }
+            0xff1e => {
+                // NR34
+                if value & 0x80 == 0x80 {
+                    self.start_channel3(); // restart
+                }
+                let frequency_value: u16 =
+                    ((self.ram[0x1e] & 0x07) as u16) << 8 | self.ram[0x1d] as u16;
+                self.channel3.frequency = (65536 / (2048 - frequency_value as u32)) as f64;
+            }
+            0xff1c => {
+                // NR32
+                self.channel3.amplitude = match value & 0x60 >> 5 {
+                    0x00 => 0.0,
+                    0x01 => 1.0,
+                    0x02 => 0.5,
+                    0x03 => 0.25,
+                    _ => panic!("unexpected value {:#08x}", value),
+                }
+            }
+            0xff30..=0xff3f => {
+                // Wave Pattern RAM
+                if self.ram[0x1a] & 0x80 == 0x80 {
+                    panic!("unexpected address {:#08x}", address);
+                }
+                let index: usize = ((address - 0xff30) * 2) as usize;
+                self.channel3.wave_form[index] = ((value >> 4) as i16 - 8) * 125;
+                self.channel3.wave_form[index + 1] = ((value & 0x0f) as i16 - 8) * 125;
+            }
+
             0xff24 => {
                 // NR50
                 self.lvol = (((self.ram[ram_address] & 0x70) >> 4) as f64) / 7.0;
@@ -195,6 +248,7 @@ impl APU {
 
                 self.channel1.is_on = o1r | o1l;
             }
+
             _ => (),
         }
     }
