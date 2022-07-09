@@ -243,10 +243,19 @@ impl APU {
 
             0xff25 => {
                 // NR51
-                let o1r = self.ram[ram_address] & 0x01 == 0x01;
-                let o1l = self.ram[ram_address] & 0x10 == 0x10;
+                let out1r = self.ram[ram_address] & 0x01 == 0x01;
+                let out1l = self.ram[ram_address] & 0x10 == 0x10;
+                let out2r = self.ram[ram_address] & 0x02 == 0x02;
+                let out2l = self.ram[ram_address] & 0x20 == 0x20;
+                let out3r = self.ram[ram_address] & 0x04 == 0x04;
+                let out3l = self.ram[ram_address] & 0x40 == 0x40;
+                //let out4r = self.ram[ram_address] & 0x08 == 0x08;
+                //let out4l = self.ram[ram_address] & 0x80 == 0x80;
 
-                self.channel1.is_on = o1r | o1l;
+                self.channel1.is_on = out1r | out1l;
+                self.channel2.is_on = out2r | out2l;
+                self.channel3.is_on = out3r | out3l;
+                //self.channel4.is_on = out4r | out4l;
             }
 
             _ => (),

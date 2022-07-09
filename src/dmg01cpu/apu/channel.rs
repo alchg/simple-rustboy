@@ -60,7 +60,7 @@ impl Channel {
         let step: f64 = self.frequency * (std::f64::consts::PI * 2.0) / Common::SAMPLE_RATE as f64;
         self.time += step;
 
-        if self.is_playing() {
+        if self.is_playing() && self.is_on {
             output = ((self.sqware_wave(self.time) as f64) * self.amplitude) as i16;
             if self.duration > 0 {
                 self.duration -= 1;
