@@ -2,7 +2,7 @@ use super::super::super::Common;
 
 const SWEEP_TIME: [f64; 7] = [0.0078, 0.0156, 0.0234, 0.0313, 0.0391, 0.0469, 0.0547];
 
-pub struct Channel {
+pub struct Tone {
     pub frequency: f64,
     pub limit: f64,
     time: f64,
@@ -25,9 +25,9 @@ pub struct Channel {
     pub sweep_increase: bool,
 }
 
-impl Channel {
-    pub fn new() -> Channel {
-        Channel {
+impl Tone {
+    pub fn new() -> Tone {
+        Tone {
             frequency: 0.0,
             limit: 0.0,
             time: 0.0,

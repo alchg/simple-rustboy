@@ -1,17 +1,17 @@
-mod channel;
+mod tone;
 mod wave;
 
 use super::super::Common;
 use super::Log;
-use channel::Channel;
+use tone::Tone;
 use wave::Wave;
 
 pub struct APU {
     log_mode: u8,
-    channel1: Channel,
-    channel2: Channel,
+    channel1: Tone,
+    channel2: Tone,
     channel3: Wave,
-    //channel4: Channel,
+    //channel4: Noise,
     lvol: f64,
     rvol: f64,
     ram: [u8; 0x40],
@@ -21,10 +21,10 @@ impl APU {
     pub fn new(log_mode: u8) -> Self {
         let apu = APU {
             log_mode: log_mode,
-            channel1: Channel::new(),
-            channel2: Channel::new(),
+            channel1: Tone::new(),
+            channel2: Tone::new(),
             channel3: Wave::new(),
-            //channel4: Channel::new(),
+            //channel4: Noise::new(),
             lvol: 0.0,
             rvol: 0.0,
             ram: [0; 0x40],
@@ -168,6 +168,7 @@ impl APU {
         self.ram[ram_address] = value;
 
         match address {
+            // 0xff13 NR13
             0xff14 => {
                 // NR14
                 if value & 0x80 == 0x80 {
@@ -182,7 +183,10 @@ impl APU {
                 let wave_pattern: u8 = (self.ram[ram_address] & 0xc0) >> 6;
                 self.channel1.limit = self.get_squarelimit(wave_pattern);
             }
+            // 0xff10 NR10
+            // 0xff12 NR12
 
+            // 0xff18 NR23
             0xff19 => {
                 // NR24
                 if value & 0x80 == 0x80 {
@@ -197,7 +201,9 @@ impl APU {
                 let wave_pattern: u8 = (self.ram[ram_address] & 0xc0) >> 6;
                 self.channel2.limit = self.get_squarelimit(wave_pattern);
             }
+            // 0xff17 NR22
 
+            //
             0xff1a => {
                 // NR30
                 if self.ram[ram_address] & 0x80 == 0x80 {
@@ -215,6 +221,7 @@ impl APU {
                     ((self.ram[0x1e] & 0x07) as u16) << 8 | self.ram[0x1d] as u16;
                 self.channel3.frequency = (65536 / (2048 - frequency_value as u32)) as f64;
             }
+            // 0xff1d NR33
             0xff1c => {
                 // NR32
                 self.channel3.amplitude = match value & 0x60 >> 5 {
@@ -225,6 +232,7 @@ impl APU {
                     _ => panic!("unexpected value {:#08x}", value),
                 }
             }
+            // 0xff1b NR31
             0xff30..=0xff3f => {
                 // Wave Pattern RAM
                 if self.ram[0x1a] & 0x80 == 0x80 {
