@@ -1,8 +1,10 @@
+mod noise;
 mod tone;
 mod wave;
 
 use super::super::Common;
 use super::Log;
+use noise::Noise;
 use tone::Tone;
 use wave::Wave;
 
@@ -11,7 +13,7 @@ pub struct APU {
     channel1: Tone,
     channel2: Tone,
     channel3: Wave,
-    //channel4: Noise,
+    channel4: Noise,
     lvol: f64,
     rvol: f64,
     ram: [u8; 0x40],
@@ -24,7 +26,7 @@ impl APU {
             channel1: Tone::new(),
             channel2: Tone::new(),
             channel3: Wave::new(),
-            //channel4: Noise::new(),
+            channel4: Noise::new(),
             lvol: 0.0,
             rvol: 0.0,
             ram: [0; 0x40],
@@ -39,9 +41,10 @@ impl APU {
         let vol: f64 = (self.lvol + self.rvol) / 2.0;
 
         for _ in 0..max + modify {
-            let value =
-                (self.channel1.sample() + self.channel2.sample() + self.channel3.sample()) / 3;
-
+            let value = self.channel1.sample()
+                + self.channel2.sample()
+                + self.channel3.sample()
+                + self.channel4.sample();
             result.push(((value as f64) * vol) as i16);
         }
 
@@ -109,6 +112,28 @@ impl APU {
         }
 
         self.channel3.reset(duration);
+    }
+
+    fn start_channel4(&mut self) {
+        let selection = (self.ram[0x23] & 0x40) >> 6; // 1:stop when nr41 expire
+        let length = self.ram[0x20] & 0x3f;
+
+        let envelope_vol = (self.ram[0x21] & 0xf0) >> 4;
+        let envelope_dir = (self.ram[0x21] & 0x08) >> 3;
+        let envelope_sweep = self.ram[0x21] & 0x07;
+
+        let mut duration = -1;
+        if selection == 1 {
+            duration =
+                ((((61 - length) as f32) * (1.0 / 256.0)) as i32) * Common::SAMPLE_RATE as i32;
+        }
+
+        self.channel4.reset(duration);
+        self.channel4.envelope_steps = envelope_vol as i32;
+        self.channel4.envelope_steps_init = envelope_vol as i32;
+        self.channel4.envelope_samples =
+            (envelope_sweep as i32) * (Common::SAMPLE_RATE as i32) / 64;
+        self.channel4.envelope_increasing = envelope_dir == 1;
     }
 
     fn masked_read(&self, address: u16, value: u8) -> u8 {
@@ -243,6 +268,25 @@ impl APU {
                 self.channel3.wave_form[index + 1] = ((value & 0x0f) as i16 - 8) * 125;
             }
 
+            0xff22 => {
+                // NR43
+                let clock_shift: u16 = ((value & 0xf0) >> 4) as u16;
+                let mut div_ratio: f64 = (value & 0x07) as f64;
+                if div_ratio == 0.0 {
+                    div_ratio = 0.5;
+                }
+                self.channel4.frequency = 524288.0 / div_ratio / (clock_shift + 1).pow(2) as f64;
+            }
+            // 0xff20 NR41
+            0xff23 => {
+                // NR44
+                if value & 0x80 == 0x80 {
+                    self.start_channel4(); // restart
+                }
+            }
+            // 0xff21 NR42
+
+            //
             0xff24 => {
                 // NR50
                 self.lvol = (((self.ram[ram_address] & 0x70) >> 4) as f64) / 7.0;
@@ -257,13 +301,13 @@ impl APU {
                 let out2l = self.ram[ram_address] & 0x20 == 0x20;
                 let out3r = self.ram[ram_address] & 0x04 == 0x04;
                 let out3l = self.ram[ram_address] & 0x40 == 0x40;
-                //let out4r = self.ram[ram_address] & 0x08 == 0x08;
-                //let out4l = self.ram[ram_address] & 0x80 == 0x80;
+                let out4r = self.ram[ram_address] & 0x08 == 0x08;
+                let out4l = self.ram[ram_address] & 0x80 == 0x80;
 
                 self.channel1.is_on = out1r | out1l;
                 self.channel2.is_on = out2r | out2l;
                 self.channel3.is_on = out3r | out3l;
-                //self.channel4.is_on = out4r | out4l;
+                self.channel4.is_on = out4r | out4l;
             }
 
             _ => (),
