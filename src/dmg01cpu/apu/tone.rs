@@ -114,7 +114,7 @@ impl Tone {
     fn update_sweep(&mut self) {
         if self.sweep_step < self.sweep_steps {
             let time = SWEEP_TIME[(self.sweep_step_len - 1) as usize];
-            self.sweep_time += (Common::SAMPLE_RATE as f64) / 60.0;
+            self.sweep_time += Common::SAMPLE_RATE as f64 / Common::FPS as f64;
             if self.sweep_time > time {
                 self.sweep_time -= time;
                 self.sweep_step += 1;

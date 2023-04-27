@@ -64,6 +64,7 @@ impl Log {
 pub struct Common {}
 impl Common {
     pub const SAMPLE_RATE: u32 = 44100;
+    pub const FPS: u8 = 60;
 
     /*
     fn is_bit_n_on(value: u8, bit: u8) -> bool {
@@ -174,13 +175,13 @@ fn main() {
 
     audio_queue.resume();
 
-    let wait: time::Duration = time::Duration::from_micros(1000000 / 60);
+    let wait: time::Duration = time::Duration::from_micros(1000000 / Common::FPS as u64);
     'running: loop {
         let start: time::Instant = time::Instant::now();
         let mut cycle: u32 = 0;
 
         // cpu clock 4.194304 MHz
-        while cycle < 4194304 / 60 {
+        while cycle < 4194304 / Common::FPS as u32 {
             cycle += system.execute() as u32;
         }
 

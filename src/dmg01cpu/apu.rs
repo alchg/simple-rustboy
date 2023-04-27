@@ -37,7 +37,7 @@ impl APU {
 
     pub fn execute(&mut self, modify: u32) -> Vec<i16> {
         let mut result = Vec::new();
-        let max: u32 = Common::SAMPLE_RATE / 60;
+        let max: u32 = Common::SAMPLE_RATE / Common::FPS as u32;
         let vol: f64 = (self.lvol + self.rvol) / 2.0;
 
         for _ in 0..max + modify {
