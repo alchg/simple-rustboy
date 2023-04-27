@@ -2,7 +2,7 @@ use super::super::super::Common;
 
 pub struct Wave {
     pub frequency: f64,
-    time: f64,
+    pub time: f64,
     pub amplitude: f64,
     duration: i32, // duration in sample
     pub is_on: bool,

@@ -4,8 +4,8 @@ use super::super::super::Common;
 
 pub struct Noise {
     pub frequency: f64,
-    time: f64,
-    last_time: f64,
+    pub time: f64,
+    pub last_time: f64,
     noise_value: i16,
     amplitude: f64,
     duration: i32, // duration in sample

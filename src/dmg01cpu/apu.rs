@@ -10,6 +10,7 @@ use wave::Wave;
 
 pub struct APU {
     log_mode: u8,
+    counter: u32, // FPS
     channel1: Tone,
     channel2: Tone,
     channel3: Wave,
@@ -23,6 +24,7 @@ impl APU {
     pub fn new(log_mode: u8) -> Self {
         let apu = APU {
             log_mode: log_mode,
+            counter: 1,
             channel1: Tone::new(),
             channel2: Tone::new(),
             channel3: Wave::new(),
@@ -48,6 +50,17 @@ impl APU {
             result.push(((value as f64) * vol) as i16);
         }
 
+        if self.counter >= 3600 * Common::FPS as u32 - 1 {
+            self.channel1.time = 0.0;
+            self.channel2.time = 0.0;
+            self.channel3.time = 0.0;
+            self.channel4.time = 0.0;
+            self.channel4.last_time = 0.0;
+            self.counter = 0;
+            Log::info(format!("RESET APU TIME"), self.log_mode);
+        }
+
+        self.counter += 1;
         result
     }
 
