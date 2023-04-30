@@ -8,6 +8,16 @@ sdl2 v0.35.2
 # Build and Run
 cargo run romfile-path
 
+# Key input
+Up    :Up
+Down  :Down
+Left  :Left
+Right :Right
+Start :Return
+Select:Space
+A     :X
+B     :Z
+
 # Supported ROM
 - [x] No MBC
 - [x] MBC1
