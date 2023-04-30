@@ -1,7 +1,9 @@
 mod mbc1;
+mod mbc5;
 
 use super::Log;
 use mbc1::MBC1;
+use mbc5::MBC5;
 use std::fs::File;
 use std::io::Read;
 
@@ -11,6 +13,7 @@ pub struct Cartridge {
     pub ram: Vec<u8>,
     cartridge_type: u8,
     mbc1: MBC1,
+    mbc5: MBC5,
 }
 
 impl Cartridge {
@@ -30,9 +33,11 @@ impl Cartridge {
 
         let ram_size: usize = match data[0x0149] {
             0 => 0,
-            1 => 2 * 1024,
+            1 => 2 * 1024, // unused
             2 => 8 * 1024,
-            3 => 32 * 1024, // 4 banks
+            3 => 8 * 4 * 1024,  // 4 banks
+            4 => 8 * 16 * 1024, // 16 banks
+            5 => 8 * 8 * 1024,  // 8 banks
             _ => panic!("unsupported ram size"),
         };
         Log::info(format!("{: <5}:{} byte", "RAM", ram_size), log_mode);
@@ -41,6 +46,7 @@ impl Cartridge {
         match cartridge_type {
             0x00 => Log::info(format!("{: <5}:{}", "Type", "NONE"), log_mode),
             0x01..=0x03 => Log::info(format!("{: <5}:{}", "Type", "MBC1"), log_mode),
+            0x19..=0x1e => Log::info(format!("{: <5}:{}", "Type", "MBC5"), log_mode),
             _ => {
                 Log::info(format!("{: <5}:{:#04x}", "Type", cartridge_type), log_mode);
                 panic!("unsupported type {:#04x}", cartridge_type);
@@ -53,6 +59,7 @@ impl Cartridge {
             ram: vec![0; ram_size],
             cartridge_type,
             mbc1: MBC1::new(log_mode),
+            mbc5: MBC5::new(log_mode),
         }
     }
 
@@ -65,6 +72,7 @@ impl Cartridge {
 
         match self.cartridge_type {
             0x00..=0x03 => self.mbc1.write(address, value, &mut self.ram),
+            0x19..=0x1e => self.mbc5.write(address, value, &mut self.ram),
             _ => panic!("unsupported type {:#04x}", self.cartridge_type),
         }
     }
@@ -77,6 +85,7 @@ impl Cartridge {
 
         let result: u8 = match self.cartridge_type {
             0x00..=0x03 => self.mbc1.read(address, &self.rom, &self.ram),
+            0x19..=0x1e => self.mbc5.read(address, &self.rom, &self.ram),
             _ => panic!("unsupported type {:#04x}", self.cartridge_type),
         };
 

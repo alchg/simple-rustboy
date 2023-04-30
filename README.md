@@ -13,7 +13,7 @@ cargo run romfile-path
 - [x] MBC1
 - [ ] MBC2
 - [ ] MBC3
-- [ ] MBC5
+- [x] MBC5
 - [ ] MBC6
 - [ ] MBC7
 - [ ] MMM01
