@@ -9,14 +9,14 @@ sdl2 v0.35.2
 cargo run romfile-path
 
 # Key input
-Up    :Up
-Down  :Down
-Left  :Left
-Right :Right
-Start :Return
-Select:Space
-A     :X
-B     :Z
+Up    :Up  
+Down  :Down  
+Left  :Left  
+Right :Right  
+Start :Return  
+Select:Space  
+A     :X  
+B     :Z  
 
 # Supported ROM
 - [x] No MBC
