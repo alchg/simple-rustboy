@@ -23,7 +23,7 @@ pub struct APU {
 impl APU {
     pub fn new(log_mode: u8) -> Self {
         let apu = APU {
-            log_mode: log_mode,
+            log_mode,
             counter: 1,
             channel1: Tone::new(),
             channel2: Tone::new(),

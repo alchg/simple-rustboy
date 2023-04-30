@@ -87,7 +87,7 @@ pub struct Dmg01Cpu {
 impl Dmg01Cpu {
     pub fn new(log_mode: u8, romfile: String) -> Self {
         let dmg01cpu = Dmg01Cpu {
-            log_mode: log_mode,
+            log_mode,
             cycle: 0,
             ime: 0x00,
             interrupt_flag: 0x00,

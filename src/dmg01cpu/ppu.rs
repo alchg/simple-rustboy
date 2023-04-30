@@ -39,7 +39,7 @@ pub struct PPU {
 impl PPU {
     pub fn new(log_mode: u8) -> Self {
         PPU {
-            log_mode: log_mode,
+            log_mode,
             counter: 0,
             frame_buffer: [0; (SCREEN_WIDTH as u16 * SCREEN_HEIGHT as u16) as usize],
             bg_priority: [BGPriority::Color0; SCREEN_WIDTH as usize],
