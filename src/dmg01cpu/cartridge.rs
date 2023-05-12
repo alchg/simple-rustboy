@@ -5,12 +5,13 @@ use super::Log;
 use mbc1::MBC1;
 use mbc5::MBC5;
 use std::fs::File;
-use std::io::Read;
+use std::io::{Read, Write};
 
 pub struct Cartridge {
     log_mode: u8,
     pub rom: Vec<u8>,
     pub ram: Vec<u8>,
+    ramfile: String,
     cartridge_type: u8,
     mbc1: MBC1,
     mbc5: MBC5,
@@ -19,6 +20,7 @@ pub struct Cartridge {
 impl Cartridge {
     pub fn new(log_mode: u8, romfile: String) -> Self {
         let mut data = Vec::new();
+        let ramfile: String = romfile.clone() + ".sav";
 
         let mut file: File = match File::open(romfile) {
             Ok(result) => result,
@@ -57,10 +59,25 @@ impl Cartridge {
             log_mode,
             rom: data,
             ram: vec![0; ram_size],
+            ramfile,
             cartridge_type,
             mbc1: MBC1::new(log_mode),
             mbc5: MBC5::new(log_mode),
         }
+    }
+
+    pub fn save(self) {
+        Log::info(format!("{: <5}:{}", "Save", self.ramfile), self.log_mode);
+
+        let mut file: File = match File::create(self.ramfile) {
+            Ok(result) => result,
+            Err(error) => panic!("file create error:{}", error),
+        };
+
+        match file.write_all(&self.ram) {
+            Ok(result) => result,
+            Err(error) => panic!("file write error:{}", error),
+        };
     }
 
     pub fn write(&mut self, address: u16, value: u8) {

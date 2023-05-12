@@ -81,7 +81,7 @@ pub struct Dmg01Cpu {
     pub ppu: PPU,
     pub apu: APU,
     pub joypad: Joypad,
-    cartridge: Cartridge,
+    pub cartridge: Cartridge,
 }
 
 impl Dmg01Cpu {

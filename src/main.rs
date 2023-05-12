@@ -246,6 +246,7 @@ fn main() {
             std::thread::sleep(wait - elapsed);
         }
     }
+    system.cartridge.save();
 
     std::process::exit(0);
 }
