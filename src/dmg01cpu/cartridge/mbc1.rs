@@ -51,7 +51,12 @@ impl MBC1 {
         match address {
             0x0000..=0x1fff => self.enable_ram = value,
             0x2000..=0x3fff => self.rom_bank = value & 0x1f,
-            0x4000..=0x5fff => self.shared_bank = value,
+            0x4000..=0x5fff => {
+                match self.bank_mode {
+                    0x01 => self.shared_bank = value & 0x03, // ram banking mode
+                    _ => self.shared_bank = (value & 0x03) << 5, // 0x00:rom banking mode
+                }
+            }
             0x6000..=0x7fff => self.bank_mode = value & 0x01,
             0xa000..=0xbfff => {
                 if self.is_ram_enabled() {
