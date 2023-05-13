@@ -89,7 +89,7 @@ impl APU {
         self.channel1.envelope_increasing = envelope_dir == 1;
 
         self.channel1.sweep_step_len = sweep_time;
-        self.channel1.sweep_step = sweep_num;
+        self.channel1.sweep_step_num = sweep_num;
         self.channel1.sweep_increase = sweep_dir == 0;
     }
 

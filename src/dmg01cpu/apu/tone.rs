@@ -19,9 +19,9 @@ pub struct Tone {
 
     // Sweep
     sweep_time: f64,
-    sweep_steps: u8,
+    sweep_step: u8,
     pub sweep_step_len: u8,
-    pub sweep_step: u8,
+    pub sweep_step_num: u8,
     pub sweep_increase: bool,
 }
 
@@ -40,9 +40,9 @@ impl Tone {
             envelope_samples: 0,
             envelope_increasing: false,
             sweep_time: 0.0,
-            sweep_steps: 0x00,
-            sweep_step_len: 0x00,
             sweep_step: 0x00,
+            sweep_step_len: 0x00,
+            sweep_step_num: 0x00,
             sweep_increase: false,
         }
     }
@@ -112,7 +112,7 @@ impl Tone {
     }
 
     fn update_sweep(&mut self) {
-        if self.sweep_step < self.sweep_steps {
+        if self.sweep_step < self.sweep_step_num {
             let time = SWEEP_TIME[(self.sweep_step_len - 1) as usize];
             self.sweep_time += Common::SAMPLE_RATE as f64 / Common::FPS as f64;
             if self.sweep_time > time {
