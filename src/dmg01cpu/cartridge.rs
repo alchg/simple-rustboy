@@ -6,6 +6,7 @@ use mbc1::MBC1;
 use mbc5::MBC5;
 use std::fs::File;
 use std::io::{Read, Write};
+use std::path::Path;
 
 pub struct Cartridge {
     log_mode: u8,
@@ -19,21 +20,14 @@ pub struct Cartridge {
 
 impl Cartridge {
     pub fn new(log_mode: u8, romfile: String) -> Self {
-        let mut data = Vec::new();
+        let rom_data: Vec<u8>;
+        let ram_data: Vec<u8>;
         let ramfile: String = romfile.clone() + ".sav";
 
-        let mut file: File = match File::open(romfile) {
-            Ok(result) => result,
-            Err(error) => panic!("file open error:{}", error),
-        };
+        rom_data = Self::load_file(romfile);
+        Log::info(format!("{: <5}:{} byte", "Size", rom_data.len()), log_mode);
 
-        match file.read_to_end(&mut data) {
-            Ok(result) => result,
-            Err(error) => panic!("file read error:{}", error),
-        };
-        Log::info(format!("{: <5}:{} byte", "Size", data.len()), log_mode);
-
-        let ram_size: usize = match data[0x0149] {
+        let ram_size: usize = match rom_data[0x0149] {
             0 => 0,
             1 => 2 * 1024, // unused
             2 => 8 * 1024,
@@ -42,9 +36,18 @@ impl Cartridge {
             5 => 8 * 8 * 1024,  // 8 banks
             _ => panic!("unsupported ram size"),
         };
-        Log::info(format!("{: <5}:{} byte", "RAM", ram_size), log_mode);
 
-        let cartridge_type: u8 = data[0x0147];
+        let path: &Path = Path::new(&ramfile);
+        if path.exists() {
+            Log::info(format!("{: <5}:{}", "RAM", ramfile), log_mode);
+            ram_data = Self::load_file(ramfile.clone());
+        } else {
+            Log::info(format!("{: <5}:", "RAM"), log_mode);
+            ram_data = vec![0; ram_size];
+        }
+        Log::info(format!("{: <5}:{} byte", "SIZE", ram_data.len()), log_mode);
+
+        let cartridge_type: u8 = rom_data[0x0147];
         match cartridge_type {
             0x00 => Log::info(format!("{: <5}:{}", "Type", "NONE"), log_mode),
             0x01..=0x03 => Log::info(format!("{: <5}:{}", "Type", "MBC1"), log_mode),
@@ -57,13 +60,28 @@ impl Cartridge {
 
         Cartridge {
             log_mode,
-            rom: data,
-            ram: vec![0; ram_size],
+            rom: rom_data,
+            ram: ram_data,
             ramfile,
             cartridge_type,
             mbc1: MBC1::new(log_mode),
             mbc5: MBC5::new(log_mode),
         }
+    }
+
+    fn load_file(file: String) -> Vec<u8> {
+        let mut data = Vec::new();
+
+        let mut file: File = match File::open(file) {
+            Ok(result) => result,
+            Err(error) => panic!("file open error:{}", error),
+        };
+
+        match file.read_to_end(&mut data) {
+            Ok(result) => result,
+            Err(error) => panic!("file read error:{}", error),
+        };
+        data
     }
 
     pub fn save(self) {

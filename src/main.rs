@@ -98,7 +98,7 @@ fn main() {
     let args: std::env::Args = std::env::args();
     if 1 < args.len() && args.len() < 4 {
         romfile = std::env::args().nth(1).unwrap();
-        println!("ROM :{}", romfile);
+        println!("ROM:{}", romfile);
 
         if args.len() == 3 {
             let value: String = std::env::args().nth(2).unwrap();
