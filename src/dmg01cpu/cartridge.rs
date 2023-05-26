@@ -1,8 +1,10 @@
 mod mbc1;
+mod mbc2;
 mod mbc5;
 
 use super::Log;
 use mbc1::MBC1;
+use mbc2::MBC2;
 use mbc5::MBC5;
 use std::fs::File;
 use std::io::{Read, Write};
@@ -15,6 +17,7 @@ pub struct Cartridge {
     ramfile: String,
     cartridge_type: u8,
     mbc1: MBC1,
+    mbc2: MBC2,
     mbc5: MBC5,
 }
 
@@ -27,8 +30,25 @@ impl Cartridge {
         rom_data = Self::load_file(romfile);
         Log::info(format!("{: <5}:{} byte", "Size", rom_data.len()), log_mode);
 
+        let cartridge_type: u8 = rom_data[0x0147];
+        match cartridge_type {
+            0x00 => Log::info(format!("{: <5}:{}", "Type", "NONE"), log_mode),
+            0x01..=0x03 => Log::info(format!("{: <5}:{}", "Type", "MBC1"), log_mode),
+            0x05..=0x06 => Log::info(format!("{: <5}:{}", "Type", "MBC2"), log_mode),
+            0x19..=0x1e => Log::info(format!("{: <5}:{}", "Type", "MBC5"), log_mode),
+            _ => {
+                Log::info(format!("{: <5}:{:#04x}", "Type", cartridge_type), log_mode);
+                panic!("unsupported type {:#04x}", cartridge_type);
+            }
+        }
+
         let ram_size: usize = match rom_data[0x0149] {
-            0 => 0,
+            0 => {
+                match cartridge_type {
+                    0x05..=0x06 => 512, // mbc2
+                    _ => 0,
+                }
+            }
             1 => 2 * 1024, // unused
             2 => 8 * 1024,
             3 => 8 * 4 * 1024,  // 4 banks
@@ -47,17 +67,6 @@ impl Cartridge {
         }
         Log::info(format!("{: <5}:{} byte", "SIZE", ram_data.len()), log_mode);
 
-        let cartridge_type: u8 = rom_data[0x0147];
-        match cartridge_type {
-            0x00 => Log::info(format!("{: <5}:{}", "Type", "NONE"), log_mode),
-            0x01..=0x03 => Log::info(format!("{: <5}:{}", "Type", "MBC1"), log_mode),
-            0x19..=0x1e => Log::info(format!("{: <5}:{}", "Type", "MBC5"), log_mode),
-            _ => {
-                Log::info(format!("{: <5}:{:#04x}", "Type", cartridge_type), log_mode);
-                panic!("unsupported type {:#04x}", cartridge_type);
-            }
-        }
-
         Cartridge {
             log_mode,
             rom: rom_data,
@@ -65,6 +74,7 @@ impl Cartridge {
             ramfile,
             cartridge_type,
             mbc1: MBC1::new(log_mode),
+            mbc2: MBC2::new(log_mode),
             mbc5: MBC5::new(log_mode),
         }
     }
@@ -107,6 +117,7 @@ impl Cartridge {
 
         match self.cartridge_type {
             0x00..=0x03 => self.mbc1.write(address, value, &mut self.ram),
+            0x05..=0x06 => self.mbc2.write(address, value, &mut self.ram),
             0x19..=0x1e => self.mbc5.write(address, value, &mut self.ram),
             _ => panic!("unsupported type {:#04x}", self.cartridge_type),
         }
@@ -120,6 +131,7 @@ impl Cartridge {
 
         let result: u8 = match self.cartridge_type {
             0x00..=0x03 => self.mbc1.read(address, &self.rom, &self.ram),
+            0x05..=0x06 => self.mbc2.read(address, &self.rom, &self.ram),
             0x19..=0x1e => self.mbc5.read(address, &self.rom, &self.ram),
             _ => panic!("unsupported type {:#04x}", self.cartridge_type),
         };
