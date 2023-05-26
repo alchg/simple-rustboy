@@ -17,14 +17,14 @@ impl Joypad {
 
     pub fn keydown(&mut self, button: Keycode) {
         match button {
-            Keycode::Down => self.state &= !0x80,
-            Keycode::Up => self.state &= !0x40,
-            Keycode::Left => self.state &= !0x20,
-            Keycode::Right => self.state &= !0x10,
+            Keycode::S => self.state &= !0x80,
+            Keycode::W => self.state &= !0x40,
+            Keycode::A => self.state &= !0x20,
+            Keycode::D => self.state &= !0x10,
             Keycode::Return => self.state &= !0x08, // start
             Keycode::Space => self.state &= !0x04,  // select
-            Keycode::Z => self.state &= !0x02,      // b
-            Keycode::X => self.state &= !0x01,      // a
+            Keycode::K => self.state &= !0x02,      // b
+            Keycode::L => self.state &= !0x01,      // a
             _ => return,
         }
 
@@ -33,14 +33,14 @@ impl Joypad {
 
     pub fn keyup(&mut self, button: Keycode) {
         match button {
-            Keycode::Down => self.state |= 0x80,
-            Keycode::Up => self.state |= 0x40,
-            Keycode::Left => self.state |= 0x20,
-            Keycode::Right => self.state |= 0x10,
+            Keycode::S => self.state |= 0x80,
+            Keycode::W => self.state |= 0x40,
+            Keycode::A => self.state |= 0x20,
+            Keycode::D => self.state |= 0x10,
             Keycode::Return => self.state |= 0x08, // start
             Keycode::Space => self.state |= 0x04,  // select
-            Keycode::Z => self.state |= 0x02,      // b
-            Keycode::X => self.state |= 0x01,      // a
+            Keycode::K => self.state |= 0x02,      // b
+            Keycode::L => self.state |= 0x01,      // a
             _ => return,
         }
     }
