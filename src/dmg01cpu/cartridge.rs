@@ -1,10 +1,12 @@
 mod mbc1;
 mod mbc2;
+mod mbc3;
 mod mbc5;
 
 use super::Log;
 use mbc1::MBC1;
 use mbc2::MBC2;
+use mbc3::MBC3;
 use mbc5::MBC5;
 use std::fs::File;
 use std::io::{Read, Write};
@@ -18,6 +20,7 @@ pub struct Cartridge {
     cartridge_type: u8,
     mbc1: MBC1,
     mbc2: MBC2,
+    mbc3: MBC3,
     mbc5: MBC5,
 }
 
@@ -35,6 +38,7 @@ impl Cartridge {
             0x00 => Log::info(format!("{: <5}:{}", "Type", "NONE"), log_mode),
             0x01..=0x03 => Log::info(format!("{: <5}:{}", "Type", "MBC1"), log_mode),
             0x05..=0x06 => Log::info(format!("{: <5}:{}", "Type", "MBC2"), log_mode),
+            0x0f..=0x13 => Log::info(format!("{: <5}:{}", "Type", "MBC3"), log_mode),
             0x19..=0x1e => Log::info(format!("{: <5}:{}", "Type", "MBC5"), log_mode),
             _ => {
                 Log::info(format!("{: <5}:{:#04x}", "Type", cartridge_type), log_mode);
@@ -75,6 +79,7 @@ impl Cartridge {
             cartridge_type,
             mbc1: MBC1::new(log_mode),
             mbc2: MBC2::new(log_mode),
+            mbc3: MBC3::new(log_mode),
             mbc5: MBC5::new(log_mode),
         }
     }
@@ -118,6 +123,7 @@ impl Cartridge {
         match self.cartridge_type {
             0x00..=0x03 => self.mbc1.write(address, value, &mut self.ram),
             0x05..=0x06 => self.mbc2.write(address, value, &mut self.ram),
+            0x0f..=0x13 => self.mbc3.write(address, value, &mut self.ram),
             0x19..=0x1e => self.mbc5.write(address, value, &mut self.ram),
             _ => panic!("unsupported type {:#04x}", self.cartridge_type),
         }
@@ -132,6 +138,7 @@ impl Cartridge {
         let result: u8 = match self.cartridge_type {
             0x00..=0x03 => self.mbc1.read(address, &self.rom, &self.ram),
             0x05..=0x06 => self.mbc2.read(address, &self.rom, &self.ram),
+            0x0f..=0x13 => self.mbc3.read(address, &self.rom, &self.ram),
             0x19..=0x1e => self.mbc5.read(address, &self.rom, &self.ram),
             _ => panic!("unsupported type {:#04x}", self.cartridge_type),
         };
