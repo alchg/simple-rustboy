@@ -3,6 +3,7 @@ mod mbc2;
 mod mbc3;
 mod mbc5;
 
+use super::super::Common;
 use super::Log;
 use mbc1::MBC1;
 use mbc2::MBC2;
@@ -14,6 +15,7 @@ use std::path::Path;
 
 pub struct Cartridge {
     log_mode: u8,
+    counter: u8, // FPS
     pub rom: Vec<u8>,
     pub ram: Vec<u8>,
     ramfile: String,
@@ -73,6 +75,7 @@ impl Cartridge {
 
         Cartridge {
             log_mode,
+            counter: 0,
             rom: rom_data,
             ram: ram_data,
             ramfile,
@@ -97,6 +100,17 @@ impl Cartridge {
             Err(error) => panic!("file read error:{}", error),
         };
         data
+    }
+
+    pub fn execute(&mut self) {
+        if self.cartridge_type == 0x0f || self.cartridge_type == 0x10 {
+            // MBC3+TIMER
+            self.counter += 1;
+            if self.counter >= Common::FPS {
+                self.counter = 0;
+                self.mbc3.exec_rtc();
+            }
+        }
     }
 
     pub fn save(self) {

@@ -245,6 +245,7 @@ fn main() {
         if elapsed < wait {
             std::thread::sleep(wait - elapsed);
         }
+        system.cartridge.execute();
     }
     system.cartridge.save();
 

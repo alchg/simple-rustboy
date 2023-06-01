@@ -43,6 +43,36 @@ impl MBC3 {
         }
     }
 
+    pub fn exec_rtc(&mut self) {
+        // 0x40 halt
+        if self.day_counter_high & 0x40 == 0x00 {
+            // active
+            self.sec += 1;
+            if self.sec > 0x3b {
+                self.sec = 0;
+                self.min += 1;
+            }
+            if self.min > 0x3b {
+                self.min = 0;
+                self.hour += 1;
+            }
+            if self.hour > 0x17 {
+                self.hour = 0;
+                let mut day_counter: u16 =
+                    (self.day_counter_high as u16) << 8 | self.day_counter_low as u16;
+                day_counter += 1;
+                self.day_counter_high = self.day_counter_high & 0xc0;
+                self.day_counter_low = 0x00;
+                if day_counter & 0x03ff > 0x01ff {
+                    self.day_counter_high = self.day_counter_high | 0x80; // counter overflow
+                } else {
+                    self.day_counter_high = (day_counter >> 8) as u8 | self.day_counter_high;
+                    self.day_counter_low = (day_counter & 0x00ff) as u8
+                }
+            }
+        }
+    }
+
     fn get_rom_bank(&self) -> u8 {
         let bank = self.rom_bank;
 
