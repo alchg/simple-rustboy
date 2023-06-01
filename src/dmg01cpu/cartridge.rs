@@ -18,7 +18,7 @@ pub struct Cartridge {
     counter: u8, // FPS
     pub rom: Vec<u8>,
     pub ram: Vec<u8>,
-    ramfile: String,
+    romfile: String,
     cartridge_type: u8,
     mbc1: MBC1,
     mbc2: MBC2,
@@ -32,7 +32,7 @@ impl Cartridge {
         let ram_data: Vec<u8>;
         let ramfile: String = romfile.clone() + ".sav";
 
-        rom_data = Self::load_file(romfile);
+        rom_data = Self::load_file(romfile.clone());
         Log::info(format!("{: <5}:{} byte", "Size", rom_data.len()), log_mode);
 
         let cartridge_type: u8 = rom_data[0x0147];
@@ -78,7 +78,7 @@ impl Cartridge {
             counter: 0,
             rom: rom_data,
             ram: ram_data,
-            ramfile,
+            romfile,
             cartridge_type,
             mbc1: MBC1::new(log_mode),
             mbc2: MBC2::new(log_mode),
@@ -114,9 +114,10 @@ impl Cartridge {
     }
 
     pub fn save(self) {
-        Log::info(format!("{: <5}:{}", "Save", self.ramfile), self.log_mode);
+        let ramfile = self.romfile + Common::RAM_FILE_EXTENSION;
+        Log::info(format!("{: <5}:{}", "Save", ramfile), self.log_mode);
 
-        let mut file: File = match File::create(self.ramfile) {
+        let mut file: File = match File::create(ramfile) {
             Ok(result) => result,
             Err(error) => panic!("file create error:{}", error),
         };

@@ -65,6 +65,7 @@ pub struct Common {}
 impl Common {
     pub const SAMPLE_RATE: u32 = 44100;
     pub const FPS: u8 = 60;
+    pub const RAM_FILE_EXTENSION: &str = ".sav";
 
     /*
     fn is_bit_n_on(value: u8, bit: u8) -> bool {
