@@ -63,8 +63,8 @@ impl Cartridge {
             _ => panic!("unsupported ram size"),
         };
 
-        let path: &Path = Path::new(&ramfile);
-        if path.exists() {
+        let ram_path: &Path = Path::new(&ramfile);
+        if ram_path.exists() {
             Log::info(format!("{: <5}:{}", "RAM", ramfile), log_mode);
             ram_data = Self::load_file(ramfile.clone());
         } else {
@@ -72,6 +72,19 @@ impl Cartridge {
             ram_data = vec![0; ram_size];
         }
         Log::info(format!("{: <5}:{} byte", "SIZE", ram_data.len()), log_mode);
+
+        let mut mbc3 = MBC3::new(log_mode);
+        if cartridge_type == 0x0f || cartridge_type == 0x10 {
+            // MBC3+TIMER
+            let rtcfile = romfile.clone() + Common::RTC_FILE_EXTENSION;
+            let rtc_path: &Path = Path::new(&rtcfile);
+            if rtc_path.exists() {
+                Log::info(format!("{: <5}:{}", "RTC", rtcfile), log_mode);
+                mbc3.load_rtc(rtcfile);
+            } else {
+                Log::info(format!("{: <5}:", "RTC"), log_mode);
+            }
+        }
 
         Cartridge {
             log_mode,
@@ -82,7 +95,7 @@ impl Cartridge {
             cartridge_type,
             mbc1: MBC1::new(log_mode),
             mbc2: MBC2::new(log_mode),
-            mbc3: MBC3::new(log_mode),
+            mbc3,
             mbc5: MBC5::new(log_mode),
         }
     }
@@ -114,7 +127,7 @@ impl Cartridge {
     }
 
     pub fn save(self) {
-        let ramfile = self.romfile + Common::RAM_FILE_EXTENSION;
+        let ramfile = self.romfile.clone() + Common::RAM_FILE_EXTENSION;
         Log::info(format!("{: <5}:{}", "Save", ramfile), self.log_mode);
 
         let mut file: File = match File::create(ramfile) {
@@ -126,6 +139,13 @@ impl Cartridge {
             Ok(result) => result,
             Err(error) => panic!("file write error:{}", error),
         };
+
+        if self.cartridge_type == 0x0f || self.cartridge_type == 0x10 {
+            // MBC3+TIMER
+            let rtcfile = self.romfile.clone() + Common::RTC_FILE_EXTENSION;
+            Log::info(format!("{: <5}:{}", "Save", rtcfile), self.log_mode);
+            self.mbc3.save_rtc(rtcfile);
+        }
     }
 
     pub fn write(&mut self, address: u16, value: u8) {

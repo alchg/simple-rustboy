@@ -5,7 +5,6 @@ mod ppu;
 mod timer;
 
 use super::Log;
-
 use apu::APU;
 use cartridge::Cartridge;
 use joypad::Joypad;

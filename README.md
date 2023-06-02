@@ -22,7 +22,7 @@ B     :K
 - [x] No MBC  
 - [x] MBC1  
 - [x] MBC2  
-- [ ] MBC3  
+- [x] MBC3  
 - [x] MBC5  
 - [ ] MBC6  
 - [ ] MBC7  
