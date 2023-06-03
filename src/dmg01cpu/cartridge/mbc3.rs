@@ -164,7 +164,7 @@ impl MBC3 {
             Err(error) => panic!("current time error:{}", error),
         };
         let current_time_sec: u64 = current_time.as_secs();
-        if current_time_sec > last_time_sec {
+        if current_time_sec >= last_time_sec {
             let counter = current_time_sec - last_time_sec;
             for _ in 0..counter {
                 self.exec_rtc();

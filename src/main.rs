@@ -173,7 +173,7 @@ fn main() {
     };
 
     let mut apu_correction = 0;
-    const AUDIO_BUFFER: u32 = 7350;
+    const AUDIO_BUFFER: u32 = 7350; // 1fps
 
     audio_queue.resume();
 
