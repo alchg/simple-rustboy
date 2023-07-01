@@ -17,6 +17,7 @@ Start :Return
 Select:Space  
 A     :L  
 B     :K  
+Exit  :ESC  
 
 # Supported ROM  
 - [x] No MBC  
